@@ -111,4 +111,4 @@ if __name__ == "__main__":
 	parser.parseData()
 	records = parser.suitableRecords
 	print(time.time() - start)
-	write(records)
+	print(len(records))
