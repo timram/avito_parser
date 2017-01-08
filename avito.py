@@ -8,7 +8,7 @@ import time
 from get.getters import getHtml, getTotalPages, getLink, getTitle, getPrice, getSalerType, getPublicationTime,\
 getExtendProductData
 from check.noutcheckers import isAppropriateData, estimate
-from write.writers import write
+from write.writers import write, writeText
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -111,4 +111,8 @@ if __name__ == "__main__":
 	parser.parseData()
 	records = parser.suitableRecords
 	print(time.time() - start)
+<<<<<<< HEAD
 	print(len(records))
+=======
+	writeText(records)
+>>>>>>> 8940332ef3bccf5d60a8a8c67452f92a568d9567
