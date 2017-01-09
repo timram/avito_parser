@@ -38,4 +38,9 @@ def estimate(title, diff, description, salerType, salerExp):
 	return rating
 
 
-	
+def checkNoutPost(parser, post):
+	return post["time"] > parser.currTime and int(post["price"]) <= parser.maxPrice and int(post["price"]) >= parser.minPrice
+
+def checkTvPost(parser, post):
+	return post["time"] > parser.currTime and int(post["price"]) <= parser.maxPrice and int(post["price"]) >= parser.minPrice \
+	and "телевизор" in post["title"].lower()	

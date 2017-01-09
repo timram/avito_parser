@@ -6,7 +6,6 @@ months = {"января":1, "февраля":2, "марта":3, "апреля":4
 		 "сентября":9, "октября":10, "ноября":11, "декабря":12}
 
 def getHtml(url):
-	print(url)
 	return requests.get(url).text
 
 def getTotalPages(html):
@@ -22,9 +21,12 @@ def getTitle(description):
 	return description.find("a", class_="item-description-title-link").get("title")
 
 def getPrice(description):
-	price = description.find("div", class_="about").text
-	price = price[price.index('\n')+1 : price.index("руб")]
-	return ''.join(price.split(' '))
+	try:
+		price = description.find("div", class_="about").text.strip()
+		price = price[:price.index("руб")]
+		return ''.join(price.split(' '))
+	except ValueError:
+		return "0"
 
 def getSalerType(description):
 	saler = description.find("div", class_="data").find("p")
@@ -34,17 +36,22 @@ def getSalerType(description):
 
 def getPublicationTime(description):
 	date = description.find("div", class_="date").text.strip()
+	hour, minute = date.split(' ')[-1].split(':')
 	if "Сегодня" in date:
-		curDate = datetime.now()
+		d = datetime.now()
+		curDate = datetime(d.year, d.month, d.day, int(hour), int(minute))
 	elif "Вчера" in date:
-		curDate = datetime.now() - timedelta(days=1)
+		d = datetime.now() - timedelta(days=1)
+		curDate = datetime(d.year, d.month, d.day, int(hour), int(minute))
 	else:
 		date = date.split(' ')[:-1]
 		if datetime.now().month < months[date[1]]:
-			curDate = datetime(datetime.now().year - 1, months[date[1]], int(date[0]))
+			curDate = datetime(datetime.now().year - 1, months[date[1]], int(date[0]), int(hour), int(minute))
 		else:
-			curDate = datetime(datetime.now().year, months[date[1]], int(date[0]))
+			curDate = datetime(datetime.now().year, months[date[1]], int(date[0]), int(hour), int(minute))
 	return curDate
+
+
 
 def getExtendProductData(url):
 	soup = BeautifulSoup(getHtml(url), "lxml")
