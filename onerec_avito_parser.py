@@ -44,8 +44,8 @@ class AvitoParser(object):
 		self.subject = kwargs["subject"] 
 		self.url = kwargs["url"] 
 		self.checkFunc = kwargs["check_func"]
-		#self.currTime = datetime(2017, 1, 9, 11)
-		self.currTime = datetime.now()
+		self.currTime = datetime(2017, 1, 9, 15)
+		#self.currTime = datetime.now()
 
 	@sending
 	def getNewPosts(self):

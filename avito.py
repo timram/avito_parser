@@ -9,6 +9,7 @@ from get.getters import getHtml, getTotalPages, getLink, getTitle, getPrice, get
 getExtendProductData
 from check.noutcheckers import isAppropriateData, estimate
 from write.writers import write, writeText
+from mail.mail import Sender
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -49,7 +50,7 @@ class AvitoParser(object):
 		pagePart = "p="
 		sortPart = "s=" + str(self.sortParam)
 		pageUrls = [self.baseUrl + '?' + pagePart + str(i+1) + "&" + sortPart for i in range(self.totalPages)]
-		pool = ThreadPool(13)
+		pool = ThreadPool(6)
 		results = pool.map(self.parsePage, pageUrls)
 		pool.close()
 		pool.join()
@@ -111,8 +112,8 @@ if __name__ == "__main__":
 	parser.parseData()
 	records = parser.suitableRecords
 	print(time.time() - start)
-<<<<<<< HEAD
 	print(len(records))
-=======
-	writeText(records)
->>>>>>> 8940332ef3bccf5d60a8a8c67452f92a568d9567
+	write(records)
+	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver="rjckec@gmail.com", subject="Avito")
+	sender.addFile("files/Avito.csv")
+	sender.send()
