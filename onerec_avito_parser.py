@@ -1,3 +1,4 @@
+import logging
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import os
@@ -7,13 +8,22 @@ from check.checkers import checkNoutPost, checkTvPost
 from mail.mail import Sender
 import time
 
-RECEIVERS = ["rjckec@gmail.com", "izmailov.rusl@yandex.ru"]
+logging.basicConfig(
+	format="%(levelname)s: %(asctime)s : %(message)s",
+	datefmt="%m/%d/%Y %I:%M:%S %p", 
+	filename="loggers/avito_parser.log", 
+	filemode='w',
+	level=logging.DEBUG
+)
+
+RECEIVERS = ["rjckec@gmail.com", "izmaylov.rusl@yandex.ru"]
 
 def sending(origin_func):
 	def wrapper(self, *args, **kwargs):
 		result = origin_func(self, *args, **kwargs)
 		if result is None:
 			print("Theris not new {0} after: {1}".format(self.subject, self.currTime))
+			logging.info("Theris not new %s after: %s\n", self.subject, self.currTime)
 			return result
 		body = []
 		for post in result:
@@ -22,8 +32,8 @@ def sending(origin_func):
 			body.append("Цена: {0} руб.\nОписние: {1}\nВремя публикации: {2}\nСсылка: {3}\n".format(post["price"], post["title"], 
 				post["time"], post["link"]))
 		body = '\n'.join(body)
-		print(self.subject)
-		print(body)
+		print("New posts of %s appeared\n %s\n", self.subject, body)
+		logging.info("New posts of %s appeared\n %s", self.subject, body)
 		for receiver in RECEIVERS:
 			sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver=receiver, subject=self.subject)
 			sender.addBody(body)
@@ -31,7 +41,6 @@ def sending(origin_func):
 			del sender
 		return result
 	return wrapper
-
 
 
 class AvitoParser(object):
@@ -90,12 +99,25 @@ if __name__ == "__main__":
 		"url": "https://www.avito.ru/sevastopol/tovary_dlya_kompyutera/monitory",
 		"check_func": checkNoutPost
 	}
-
+	logging.info("\nStart new parse session\n")
 	nouts = AvitoParser(**noutsParams)
 	tvs = AvitoParser(**tvParams)
 	monitors = AvitoParser(**monitorParams)
+	numOfNoutRequests = 0
+	numOfTvRequests = 0
+	numOfMonitorRequests = 0
 	while True:
-		nouts.getNewPosts()
-		tvs.getNewPosts()
-		monitors.getNewPosts()
-		time.sleep(60)
+		try:
+			nouts.getNewPosts()
+			numOfNoutRequests += 1
+			logging.info("%d request to %s", numOfNoutRequests, noutsParams["url"])
+			tvs.getNewPosts()
+			numOfTvRequests += 1
+			logging.info("%d requests to %s", numOfTvRequests, tvParams["url"])
+			monitors.getNewPosts()
+			numOfMonitorRequests += 1
+			logging.info("%d request to %s", numOfMonitorRequests, monitorParams["url"]) 
+			time.sleep(1200)
+		except Exception as e:
+			logging.error("%s\n", e)
+			break
