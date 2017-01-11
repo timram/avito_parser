@@ -1,5 +1,8 @@
 *.pyc
 *.txt
 *.csv
+<<<<<<< HEAD
 *.csv#
+=======
+>>>>>>> 1a9fc2b8a29b397eaf01fbc94366546f147b8bda
 *.log

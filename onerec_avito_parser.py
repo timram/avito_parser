@@ -12,10 +12,11 @@ logging.basicConfig(
 	format="%(levelname)s: %(asctime)s : %(message)s",
 	datefmt="%m/%d/%Y %I:%M:%S %p", 
 	filename="loggers/avito_parser.log", 
+	filemode='w',
 	level=logging.DEBUG
 )
 
-RECEIVERS = ["rjckec@gmail.com", "izmailov.rusl@yandex.ru"]
+RECEIVERS = ["rjckec@gmail.com", "izmaylov.rusl@yandex.ru"]
 
 def sending(origin_func):
 	def wrapper(self, *args, **kwargs):
@@ -52,8 +53,8 @@ class AvitoParser(object):
 		self.subject = kwargs["subject"] 
 		self.url = kwargs["url"] 
 		self.checkFunc = kwargs["check_func"]
-		#self.currTime = datetime(2017, 1, 9, 11)
-		self.currTime = datetime.now()
+		self.currTime = datetime(2017, 1, 9, 15)
+		#self.currTime = datetime.now()
 
 	@sending
 	def getNewPosts(self):
@@ -98,16 +99,25 @@ if __name__ == "__main__":
 		"url": "https://www.avito.ru/sevastopol/tovary_dlya_kompyutera/monitory",
 		"check_func": checkNoutPost
 	}
-	logging.info("Start new parse session\n")
+	logging.info("\nStart new parse session\n")
 	nouts = AvitoParser(**noutsParams)
 	tvs = AvitoParser(**tvParams)
 	monitors = AvitoParser(**monitorParams)
+	numOfNoutRequests = 0
+	numOfTvRequests = 0
+	numOfMonitorRequests = 0
 	while True:
 		try:
 			nouts.getNewPosts()
+			numOfNoutRequests += 1
+			logging.info("%d request to %s", numOfNoutRequests, noutsParams["url"])
 			tvs.getNewPosts()
+			numOfTvRequests += 1
+			logging.info("%d requests to %s", numOfTvRequests, tvParams["url"])
 			monitors.getNewPosts()
-			time.sleep(60)
+			numOfMonitorRequests += 1
+			logging.info("%d request to %s", numOfMonitorRequests, monitorParams["url"]) 
+			time.sleep(1200)
 		except Exception as e:
 			logging.error("%s\n", e)
 			break
