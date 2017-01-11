@@ -43,6 +43,11 @@ def sending(origin_func):
 	return wrapper
 
 
+def sendErrorReport(error)
+	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver="rjckec@gmail.com", subject="ПАРСЕР СДОХ")
+	sender.addBody("ПАРСЕР СДОХ, {0}".format(error))
+	sender.send()
+
 class AvitoParser(object):
 
 	def __init__(self, **kwargs):
