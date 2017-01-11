@@ -26,7 +26,7 @@ def sending(origin_func):
 			logging.info("Theris not new %s after: %s\n", self.subject, self.currTime)
 			return result
 		body = []
-		for post in result:
+		for post in sorted(result, key=lambda rec: rec["time"]):
 			if post["price"] == 0:
 				post["price"] = "Цена договорная"
 			body.append("Цена: {0} руб.\nОписние: {1}\nВремя публикации: {2}\nСсылка: {3}\n".format(post["price"], post["title"], 
@@ -53,23 +53,36 @@ class AvitoParser(object):
 		self.subject = kwargs["subject"] 
 		self.url = kwargs["url"] 
 		self.checkFunc = kwargs["check_func"]
-		self.currTime = datetime(2017, 1, 9, 15)
-		#self.currTime = datetime.now()
+		self.numOfRequests = 0
+		self.startTime = datetime.now()
+		diff = self.startTime - timedelta(days=1)
+		self.currTime = datetime(diff.year, diff.month, diff.day, 23, 30, 0)
+		self.todayFoundPosts = []
+		
 
 	@sending
 	def getNewPosts(self):
+		self.numOfRequests += 1
+		logging.info("%d request to %s", self.numOfRequests, self.url)
 		soup = BeautifulSoup(getHtml(self.url), "lxml")
 		catalog = soup.find("div", class_="catalog-list")
 		records = catalog.find_all("div", class_="item")
 		descriptions = [record.find("div", class_="description") for record in records]
 		posts = [{"title":getTitle(description), "link":self.baseUrl + getLink(description), "time":getPublicationTime(description), 
 		"price":getPrice(description)} for description in descriptions] 
-		suitablePosts = [post for post in posts if self.checkFunc(self, post)]
+		suitablePosts = [post for post in posts if self.checkFunc(self, post) and post not in self.todayFoundPosts]
+		self.todayFoundPosts.extend(suitablePosts)
+		self.restCurrTime()
 		if len(suitablePosts) == 0:
 			return None
-		self.currTime = datetime.now()
 		return suitablePosts
 
+	def restCurrTime(self):
+		if datetime.now().day != self.startTime.day:
+			self.startTime = datetime.now()
+			diff = self.startTime - timedelta(days=1)
+			self.currTime = datetime(diff.year, diff.month, diff.day, 23, 30, 0)
+			self.todayFoundPosts = [post for post in self.todayFoundPosts if post["time"] > self.currTime]
 
 if __name__ == "__main__":
 	os.system("clear")
@@ -103,20 +116,11 @@ if __name__ == "__main__":
 	nouts = AvitoParser(**noutsParams)
 	tvs = AvitoParser(**tvParams)
 	monitors = AvitoParser(**monitorParams)
-	numOfNoutRequests = 0
-	numOfTvRequests = 0
-	numOfMonitorRequests = 0
 	while True:
 		try:
 			nouts.getNewPosts()
-			numOfNoutRequests += 1
-			logging.info("%d request to %s", numOfNoutRequests, noutsParams["url"])
 			tvs.getNewPosts()
-			numOfTvRequests += 1
-			logging.info("%d requests to %s", numOfTvRequests, tvParams["url"])
-			monitors.getNewPosts()
-			numOfMonitorRequests += 1
-			logging.info("%d request to %s", numOfMonitorRequests, monitorParams["url"]) 
+			monitors.getNewPosts() 
 			time.sleep(1200)
 		except Exception as e:
 			logging.error("%s\n", e)
