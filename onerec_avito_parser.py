@@ -47,6 +47,7 @@ def sendErrorReport(error)
 	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver="rjckec@gmail.com", subject="ПАРСЕР СДОХ")
 	sender.addBody("ПАРСЕР СДОХ, {0}".format(error))
 	sender.send()
+	del sender
 
 class AvitoParser(object):
 
@@ -129,4 +130,5 @@ if __name__ == "__main__":
 			time.sleep(1200)
 		except Exception as e:
 			logging.error("%s\n", e)
+			sendErrorReport(str(e))
 			break
