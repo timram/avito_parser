@@ -39,7 +39,8 @@ def estimate(title, diff, description, salerType, salerExp):
 
 
 def checkNoutPost(parser, post):
-	return post["time"] > parser.currTime and int(post["price"]) <= parser.maxPrice and int(post["price"]) >= parser.minPrice
+	return post["time"] > parser.currTime and int(post["price"]) <= parser.maxPrice and int(post["price"]) >= parser.minPrice\
+	and "VK" not in post["name"].upper() and "TRADE" not in post["name"].upper()
 
 def checkTvPost(parser, post):
 	return post["time"] > parser.currTime and int(post["price"]) <= parser.maxPrice and int(post["price"]) >= parser.minPrice \

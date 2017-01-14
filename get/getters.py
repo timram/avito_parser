@@ -52,7 +52,6 @@ def getPublicationTime(description):
 	return curDate
 
 
-
 def getExtendProductData(url):
 	soup = BeautifulSoup(getHtml(url), "lxml")
 	name = soup.find("div", class_="seller-info-name").text.strip()
@@ -65,5 +64,12 @@ def getExtendProductData(url):
 	except Exception as e:
 		fullDescription = None
 	return [name, salerExp, fullDescription]
+
+def getName(url):
+	try:
+		soup = BeautifulSoup(getHtml(url), "lxml")
+		return soup.find("div", class_="seller-info-name").text.strip()
+	except Exception as e:
+		return ""
 
 	

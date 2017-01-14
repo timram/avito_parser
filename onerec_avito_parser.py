@@ -3,51 +3,18 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import os
 from multiprocessing.dummy import Pool as ThreadPool
-from get.getters import getHtml, getTitle, getLink, getPublicationTime, getPrice
+from get.getters import getHtml, getTitle, getLink, getPublicationTime, getPrice, getName
 from check.checkers import checkNoutPost, checkTvPost
-from mail.mail import Sender
+from mail.sends import sendingDecorator, sendErrorReport
+from loghandlers.handlers import getFileHandler, getConsoleHandler
 import time
 
-logging.basicConfig(
-	format="%(levelname)s: %(asctime)s : %(message)s",
-	datefmt="%m/%d/%Y %I:%M:%S %p", 
-	filename="loggers/avito_parser.log", 
-	filemode='w',
-	level=logging.DEBUG
-)
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.DEBUG)
 
-RECEIVERS = ["rjckec@gmail.com", "izmaylov.rusl@yandex.ru"]
+LOGGER.addHandler(getFileHandler())
 
-def sending(origin_func):
-	def wrapper(self, *args, **kwargs):
-		result = origin_func(self, *args, **kwargs)
-		if result is None:
-			print("Theris not new {0} after: {1}".format(self.subject, self.currTime))
-			logging.info("Theris not new %s after: %s\n", self.subject, self.currTime)
-			return result
-		body = []
-		for post in sorted(result, key=lambda rec: rec["time"]):
-			if post["price"] == 0:
-				post["price"] = "Цена договорная"
-			body.append("Цена: {0} руб.\nОписние: {1}\nВремя публикации: {2}\nСсылка: {3}\n".format(post["price"], post["title"], 
-				post["time"], post["link"]))
-		body = '\n'.join(body)
-		print("New posts of %s appeared\n %s\n", self.subject, body)
-		logging.info("New posts of %s appeared\n %s", self.subject, body)
-		for receiver in RECEIVERS:
-			sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver=receiver, subject=self.subject)
-			sender.addBody(body)
-			sender.send()
-			del sender
-		return result
-	return wrapper
-
-
-def sendErrorReport(error):
-	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver="rjckec@gmail.com", subject="ПАРСЕР СДОХ")
-	sender.addBody("ПАРСЕР СДОХ, {0}".format(error))
-	sender.send()
-	del sender
+LOGGER.addHandler(getConsoleHandler())
 
 class AvitoParser(object):
 
@@ -66,16 +33,18 @@ class AvitoParser(object):
 		self.todayFoundPosts = []
 		
 
-	@sending
+	@sendingDecorator
 	def getNewPosts(self):
 		self.numOfRequests += 1
 		logging.info("%d request to %s", self.numOfRequests, self.url)
 		soup = BeautifulSoup(getHtml(self.url), "lxml")
 		catalog = soup.find("div", class_="catalog-list")
 		records = catalog.find_all("div", class_="item")
-		descriptions = [record.find("div", class_="description") for record in records]
-		posts = [{"title":getTitle(description), "link":self.baseUrl + getLink(description), "time":getPublicationTime(description), 
-		"price":getPrice(description)} for description in descriptions] 
+		descriptions = [record.find("div", class_="description") for record in records[:5]]
+		pool = ThreadPool(4)
+		posts = pool.map(self.getPostData, descriptions)
+		pool.close()
+		pool.join()
 		suitablePosts = [post for post in posts if self.checkFunc(self, post) and post not in self.todayFoundPosts]
 		self.todayFoundPosts.extend(suitablePosts)
 		self.restCurrTime()
@@ -83,12 +52,22 @@ class AvitoParser(object):
 			return None
 		return suitablePosts
 
+	def getPostData(self, description):
+		post = {"title":getTitle(description), "link":self.baseUrl + getLink(description), "time":getPublicationTime(description), 
+		"price":getPrice(description)}
+		post["name"] = getName(post["link"])
+		return post
+
 	def restCurrTime(self):
 		if datetime.now().day != self.startTime.day:
 			self.startTime = datetime.now()
 			diff = self.startTime - timedelta(days=1)
 			self.currTime = datetime(diff.year, diff.month, diff.day, 23, 30, 0)
 			self.todayFoundPosts = [post for post in self.todayFoundPosts if post["time"] > self.currTime]
+			LOGGER.handlers[0].stream.close()
+			LOGGER.removeHandler(LOGGER.handlers[0])
+			LOGGER.addHandler(getFileHandler())
+
 
 if __name__ == "__main__":
 	os.system("clear")

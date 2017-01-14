@@ -31,11 +31,11 @@ class Sender(object):
 
 	def send(self):
 		server = smtplib.SMTP_SSL("smtp.yandex.com", 465)	
-		print("Connected to the uandex server")
+		print("Connected to the yandex server")
 		server.ehlo()
 		server.login(self.sender, self.password)
 		server.sendmail(self.message["From"], self.message["To"], self.message.as_string())
-		print("delivered")
+		print("message delivered to %s" %self.receiver)
 		server.quit()
 
 if __name__ == "__main__":
