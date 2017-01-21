@@ -1,7 +1,9 @@
 import logging
+import threading
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import os
+import sys
 from multiprocessing.dummy import Pool as ThreadPool
 from get.getters import getHtml, getTitle, getLink, getPublicationTime, getPrice, getName
 from check.checkers import checkNoutPost, checkTvPost
@@ -16,9 +18,13 @@ LOGGER.addHandler(getFileHandler())
 
 LOGGER.addHandler(getConsoleHandler())
 
-class AvitoParser(object):
+FINISHED = False
+ERROR = "error"
+
+class AvitoParser(threading.Thread):
 
 	def __init__(self, **kwargs):
+		threading.Thread.__init__(self)
 		self.baseUrl = "https://www.avito.ru" 
 		self.city = kwargs["city"]
 		self.maxPrice = kwargs["maxPrice"]
@@ -32,6 +38,16 @@ class AvitoParser(object):
 		self.currTime = datetime(diff.year, diff.month, diff.day, 23, 30, 0)
 		self.todayFoundPosts = []
 		
+
+	def run(self):
+		global FINISHED
+		while not FINISHED:
+			try:
+				self.getNewPosts()
+				time.sleep(1200)
+			except Exception as e:
+				FINISHED = True
+				ERROR = str(e)
 
 	@sendingDecorator
 	def getNewPosts(self):
@@ -101,6 +117,17 @@ if __name__ == "__main__":
 	nouts = AvitoParser(**noutsParams)
 	tvs = AvitoParser(**tvParams)
 	monitors = AvitoParser(**monitorParams)
+	parsers = [AvitoParser(**noutsParams), AvitoParser(**tvParams), AvitoParser(**monitorParams)]
+	
+	for parser in parsers:
+		parser.start()
+
+	for parser in parsers:
+		parser.join()
+
+	sendErrorReport(ERROR)
+
+	"""
 	while True:
 		try:
 			nouts.getNewPosts()
@@ -111,3 +138,4 @@ if __name__ == "__main__":
 			logging.error("%s\n", e)
 			sendErrorReport(str(e))
 			break
+	"""
