@@ -42,7 +42,7 @@ class AvitoParser(threading.Thread):
 			except Exception as e:
 				self.logger.error(e)
 				sendErrorReport(str(e) + self.subject)
-				break
+				continue
 
 	@sendingDecorator
 	def getNewPosts(self):
