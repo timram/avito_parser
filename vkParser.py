@@ -57,7 +57,7 @@ class VkParser(threading.Thread):
 		self.logger.info("%d request to vk post of %s", self.numOfRequests, self.prodType)
 		comments = getComments(self.api, self.groupId, self.postId, self.count)[1:]
 		foundPosts = [self.getPostData(post) for post in comments if self.checkFunc(self, post)]
-		suitablePosts = [post for post in foundPosts if post not in todayFoundPosts]
+		suitablePosts = [post for post in foundPosts if post not in self.todayFoundPosts]
 		self.todayFoundPosts.extend(suitablePosts)
 		self.restCurrTime()
 		if len(suitablePosts) == 0:
