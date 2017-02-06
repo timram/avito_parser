@@ -36,9 +36,9 @@ class VkParser(threading.Thread):
 		self.logger.addHandler(getFileHandler("vk_"+self.prodType))
 		self.logger.addHandler(getConsoleHandler())
 		self.startTime = datetime.now()
-		diff = self.startTime - timedelta(days=1)
-		self.currTime = datetime(diff.year, diff.month, diff.day, 23, 30, 0)
-		self.todayFoundPosts = []
+		self.currTime = time.mktime(self.startTime.timetuple())
+		#diff = self.startTime - timedelta(days=1)
+		#self.todayFoundPosts = []
 
 
 	def run(self):
@@ -57,11 +57,12 @@ class VkParser(threading.Thread):
 		self.logger.info("%d request to vk post of %s", self.numOfRequests, self.prodType)
 		comments = getComments(self.api, self.groupId, self.postId, self.count)[1:]
 		foundPosts = [self.getPostData(post) for post in comments if self.checkFunc(self, post)]
-		suitablePosts = [post for post in foundPosts if post not in self.todayFoundPosts]
-		self.todayFoundPosts.extend(suitablePosts)
-		self.restCurrTime()
-		if len(suitablePosts) == 0:
+		#suitablePosts = [post for post in foundPosts if post not in self.todayFoundPosts]
+		#self.todayFoundPosts.extend(suitablePosts)
+		#self.restCurrTime()
+		if len(foundPosts) == 0:
 			return None
+		self.currTime = time.mktime(self.datetime.now().timetuple())
 		return suitablePosts
 
 	def getPostData(self, post):

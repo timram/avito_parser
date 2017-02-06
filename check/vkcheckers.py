@@ -8,7 +8,7 @@ prohibitedTerms = ["мать", "плата", "мат", "материнка", "б
 "мышь", "мышка"]
 
 def checkVkNouts(parser, post):
-	if int(post["date"]) < int(time.mktime(parser.currTime.timetuple())):
+	if post["date"] < parser.currTime
 		return False
 
 	isIn = lambda term: term in post["text"].lower() 
