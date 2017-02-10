@@ -34,11 +34,12 @@ if __name__ == "__main__":
 	vkNoutParams = {
 		"prodType":"nouts",
 		"subject":"ВК НОУТБУКИ",
-		"count":10
+		"count":30
 	}
 
 
 	parsers = [AvitoParser(**noutsParams), AvitoParser(**tvParams), AvitoParser(**monitorParams), VkParser(**vkNoutParams)]
+	#parsers = [VkParser(**vkNoutParams)]
 	
 	for parser in parsers:
 		parser.start()
