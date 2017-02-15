@@ -1,13 +1,15 @@
 from mail.sender import Sender
+import time
 
 RECEIVERS = ["rjckec@gmail.com"]#, "izmaylov.rusl@yandex.ru"]
 
 def sendingDecorator(origin_func):
 	def wrapper(self, *args, **kwargs):
 		result = origin_func(self, *args, **kwargs)
-
+		self.lock.acquire()
 		if result is None:
 			self.logger.info("Theris not new %s after: %s\n", self.subject, self.currTime)
+			self.lock.release()
 			return result
 	
 		body = self.getBody(result)
@@ -18,8 +20,9 @@ def sendingDecorator(origin_func):
 			sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver=receiver, subject=self.subject)
 			sender.addBody(body)
 			sender.send()
-			del sender
 
+		time.sleep(1)
+		self.lock.release()
 		return result
 	
 	return wrapper

@@ -16,8 +16,9 @@ check_funcs = {"nouts":checkVkNouts, "televizori":checkVkTv, "monitori":checkVkM
 
 class VkParser(threading.Thread):
 
-	def __init__(self, **kwargs):
+	def __init__(self, lock, **kwargs):
 		threading.Thread.__init__(self)
+		self.lock = lock
 		appId = "5812997"
 		login = "rjckec@gmail.com"
 		password = "2413timur"
@@ -25,7 +26,6 @@ class VkParser(threading.Thread):
 		self.api = vk.API(session)
 		self.groupId = getGroupId(self.api, "sevads")
 		self.prodType = kwargs["prodType"]
-		self.postId = prod_ids[self.prodType](self.api)
 		self.checkFunc = check_funcs[self.prodType]
 		self.subject = kwargs["subject"]
 		self.count = kwargs["count"]
@@ -34,34 +34,34 @@ class VkParser(threading.Thread):
 		self.logger.setLevel(logging.DEBUG)
 		self.logger.addHandler(getFileHandler("vk_"+self.prodType))
 		self.logger.addHandler(getConsoleHandler())
+		self.startTime = datetime.now()
 		self.currTimeInSec = time.time() - (20 * 60 * 60)
 		self.currTime = time.ctime(self.currTimeInSec)
-		#diff = self.startTime - timedelta(days=1)
-		#self.todayFoundPosts = []
-
 
 	def run(self):
 		while True:
-			#try:
-			self.getNewPosts()
-			time.sleep(1200)
-			#except Exception as e:
-			self.logger.error(repr(e))
-			sendErrorReport(str(e) + self.subject)
-			#time.sleep(1200)
-				#continue
+			try:
+				self.getNewPosts()
+				time.sleep(600)
+			except Exception as e:
+				self.logger.error(repr(e))
+				sendErrorReport(str(e) + self.subject)
+				#time.sleep(1200)
+				break
 
 	@sendingDecorator
 	def getNewPosts(self):
 		self.numOfRequests += 1
 		self.logger.info("%d request to vk post of %s", self.numOfRequests, self.prodType)
-		comments = getComments(self.api, self.groupId, self.postId, self.count)[1:]
+		postId = prod_ids[self.prodType](self.api)
+		comments = getComments(self.api, self.groupId, postId, self.count)[1:]
 		foundPosts = [self.getPostData(post) for post in comments if self.checkFunc(self, post)]
 		if len(foundPosts) == 0:
 			return None
 		self.currTimeInSec = time.time()
 		self.currTime = time.ctime(self.currTimeInSec)
 		return foundPosts
+
 
 	def getPostData(self, post):
 		userData = getUserData(self.api, post["uid"])
@@ -85,3 +85,10 @@ class VkParser(threading.Thread):
 				body.append("Продавец: {}\nОписние: {}\nВремя публикации: {}\nФото: {}\n".format(post["userName"], post["text"], 
 					time.ctime(post["time"]), post["photos"]))
 		return '\n'.join(body)	
+
+	def resetCurrTime(self):
+		if datetime.now().day != self.startTime.day:
+			self.startTime = datetime.now()
+			self.logger.handlers[0].stream.close()
+			self.logger.removeHandler(self.logger.handlers[0])
+			self.logger.addHandler(getFileHandler(self.prodType))

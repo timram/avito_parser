@@ -34,11 +34,13 @@ if __name__ == "__main__":
 	vkNoutParams = {
 		"prodType":"nouts",
 		"subject":"ВК НОУТБУКИ",
-		"count":30
+		"count":15
 	}
 
+	lock = threading.Lock()
 
-	parsers = [AvitoParser(**noutsParams), AvitoParser(**tvParams), AvitoParser(**monitorParams), VkParser(**vkNoutParams)]
+	parsers = [AvitoParser(lock, **noutsParams), AvitoParser(lock, **tvParams), AvitoParser(lock, **monitorParams), 
+	VkParser(lock, **vkNoutParams)]
 	#parsers = [VkParser(**vkNoutParams)]
 	
 	for parser in parsers:

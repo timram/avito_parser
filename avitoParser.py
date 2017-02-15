@@ -13,8 +13,9 @@ check_funcs = {"noutbuki":checkNoutPost, "televizory_i_proektory":checkTvPost, "
 
 class AvitoParser(threading.Thread):
 
-	def __init__(self, **kwargs):
+	def __init__(self, lock, **kwargs):
 		threading.Thread.__init__(self)
+		self.lock = lock
 		self.baseUrl = "https://www.avito.ru" 
 		self.city = kwargs["city"]
 		self.maxPrice = kwargs["maxPrice"]
@@ -58,7 +59,7 @@ class AvitoParser(threading.Thread):
 		pool.join()
 		suitablePosts = [post for post in posts if self.checkFunc(self, post) and post not in self.todayFoundPosts]
 		self.todayFoundPosts.extend(suitablePosts)
-		self.restCurrTime()
+		self.resetCurrTime()
 		if len(suitablePosts) == 0:
 			return None
 		return suitablePosts
@@ -78,7 +79,7 @@ class AvitoParser(threading.Thread):
 				post["title"], post["time"], post["link"]))
 		return '\n'.join(body)
 
-	def restCurrTime(self):
+	def resetCurrTime(self):
 		if datetime.now().day != self.startTime.day:
 			self.startTime = datetime.now()
 			diff = self.startTime - timedelta(days=1)
