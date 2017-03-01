@@ -8,6 +8,7 @@ from check.checkers import checkNoutPost, checkTvPost
 from mail.sends import sendingDecorator, sendErrorReport
 from loghandlers.handlers import getFileHandler, getConsoleHandler
 import time
+import traceback
 
 check_funcs = {"noutbuki":checkNoutPost, "televizory_i_proektory":checkTvPost, "monitory":checkNoutPost}
 
@@ -26,9 +27,7 @@ class AvitoParser(threading.Thread):
 		self.checkFunc = check_funcs[self.prodType]
 		self.numOfRequests = 0
 		self.startTime = datetime.now()
-		diff = self.startTime - timedelta(days=1)
-		self.currTime = datetime(diff.year, diff.month, diff.day, 23, 30, 0)
-		self.todayFoundPosts = []
+		self.currTime = datetime.now()
 		self.logger = logging.getLogger(self.prodType)
 		self.logger.setLevel(logging.DEBUG)
 		self.logger.addHandler(getFileHandler(self.prodType))
@@ -38,17 +37,17 @@ class AvitoParser(threading.Thread):
 	def run(self):
 		while True:
 			try:
+				self.numOfRequests += 1
+				self.logger.info("%d request to %s", self.numOfRequests, self.url)
 				self.getNewPosts()
 				time.sleep(1200)
-			except Exception as e:
-				self.logger.error(e)
-				sendErrorReport(str(e) + self.subject)
-				continue
+			except:
+				self.logger.error("{}<ERROR>: {}".format(self.subject, traceback.format_exc()))
+				sendErrorReport(self.subject + '\n' + traceback.format_exc())
+				break
 
 	@sendingDecorator
 	def getNewPosts(self):
-		self.numOfRequests += 1
-		self.logger.info("%d request to %s", self.numOfRequests, self.url)
 		soup = BeautifulSoup(getHtml(self.url), "lxml")
 		catalog = soup.find("div", class_="catalog-list")
 		records = catalog.find_all("div", class_="item")
@@ -57,11 +56,11 @@ class AvitoParser(threading.Thread):
 		posts = pool.map(self.getPostData, descriptions)
 		pool.close()
 		pool.join()
-		suitablePosts = [post for post in posts if self.checkFunc(self, post) and post not in self.todayFoundPosts]
-		self.todayFoundPosts.extend(suitablePosts)
+		suitablePosts = [post for post in posts if self.checkFunc(self, post)]
 		self.resetCurrTime()
 		if len(suitablePosts) == 0:
 			return None
+		self.currTime = max([post["time"] for post in suitablePosts])
 		return suitablePosts
 
 	def getPostData(self, description):
@@ -82,9 +81,6 @@ class AvitoParser(threading.Thread):
 	def resetCurrTime(self):
 		if datetime.now().day != self.startTime.day:
 			self.startTime = datetime.now()
-			diff = self.startTime - timedelta(days=1)
-			self.currTime = datetime(diff.year, diff.month, diff.day, 23, 30, 0)
-			self.todayFoundPosts = [post for post in self.todayFoundPosts if post["time"] > self.currTime]
 			self.logger.handlers[0].stream.close()
 			self.logger.removeHandler(self.logger.handlers[0])
 			self.logger.addHandler(getFileHandler(self.prodType))

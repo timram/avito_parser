@@ -17,7 +17,8 @@ def sendingDecorator(origin_func):
 		self.logger.info("New posts of %s appeared\n %s", self.subject, body)
 		
 		for receiver in RECEIVERS:
-			sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver=receiver, subject=self.subject)
+			sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", 
+				receiver=receiver, subject=self.subject)
 			sender.addBody(body)
 			sender.send()
 
@@ -29,7 +30,8 @@ def sendingDecorator(origin_func):
 
 
 def sendErrorReport(error):
-	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver="rjckec@gmail.com", subject="ПАРСЕР СДОХ")
+	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur",
+		receiver="rjckec@gmail.com", subject="ПАРСЕР СДОХ")
 	sender.addBody("ПАРСЕР СДОХ, {0}".format(error))
 	sender.send()
 	del sender

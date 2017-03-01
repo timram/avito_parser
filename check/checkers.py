@@ -14,9 +14,9 @@ def isAppropriateData(title, name, description):
 	isAppropriate = False
 	for titles in expectedTitles:
 		if titles in title.lower() or titles in description.lower():
-			isAppropriate = True
+			return True
 			break
-	return isAppropriate
+	return False
 
 def estimate(title, diff, description, salerType, salerExp):
 	rating = 10
