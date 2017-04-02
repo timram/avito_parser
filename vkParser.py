@@ -21,8 +21,8 @@ class VkParser(threading.Thread):
 		threading.Thread.__init__(self)
 		self.lock = lock
 		appId = "5812997"
-		login = "rjckec@gmail.com"
-		password = "2413timur"
+		login = ""
+		password = ""
 		session = vk.AuthSession(app_id=appId, user_login=login, user_password=password)
 		self.api = vk.API(session)
 		self.groupId = getGroupId(self.api, "sevads")
