@@ -40,6 +40,6 @@ class Sender(object):
 
 if __name__ == "__main__":
 	import sys
-	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver="rjckec@gmail.com", subject="TEST")
+	sender = Sender(sender=, password=, receiver="rjckec@gmail.com", subject="TEST")
 	sender.addBody("САМОЕ Тестовое письмо димочке 2 ")
 	sender.send()
