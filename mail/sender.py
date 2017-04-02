@@ -37,9 +37,3 @@ class Sender(object):
 		server.sendmail(self.message["From"], self.message["To"], self.message.as_string())
 		print("message delivered to %s" %self.receiver)
 		server.quit()
-
-if __name__ == "__main__":
-	import sys
-	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", receiver="rjckec@gmail.com", subject="TEST")
-	sender.addBody("САМОЕ Тестовое письмо димочке 2 ")
-	sender.send()

@@ -36,7 +36,7 @@ def getSalerType(description):
 
 def getPublicationTime(description):
 	date = description.find("div", class_="date").text.strip()
-	hour, minute = date.split(' ')[-1].split(':')
+	hour, minute = date[-5:].split(':')
 	if "Сегодня" in date:
 		d = datetime.now()
 		curDate = datetime(d.year, d.month, d.day, int(hour), int(minute))
@@ -44,7 +44,8 @@ def getPublicationTime(description):
 		d = datetime.now() - timedelta(days=1)
 		curDate = datetime(d.year, d.month, d.day, int(hour), int(minute))
 	else:
-		date = date.split(' ')[:-1]
+		date = date[:-5].split(' ')
+		date[1] = date[1].strip()
 		if datetime.now().month < months[date[1]]:
 			curDate = datetime(datetime.now().year - 1, months[date[1]], int(date[0]), int(hour), int(minute))
 		else:
@@ -71,5 +72,3 @@ def getName(url):
 		return soup.find("div", class_="seller-info-name").text.strip()
 	except Exception as e:
 		return ""
-
-	

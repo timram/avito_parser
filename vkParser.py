@@ -7,6 +7,7 @@ from get.vkgetters import getGroupId, getNoutPostId, getTechnPostId, getComments
 from check.vkcheckers import checkVkNouts, checkVkTv, checkVkMonitors
 from mail.sends import sendingDecorator, sendErrorReport
 from loghandlers.handlers import getFileHandler, getConsoleHandler
+from vkAuthorizationReader import readAuthorizationInfo
 import time
 import vk
 import traceback
@@ -14,6 +15,7 @@ import traceback
 prod_ids = {"nouts":getNoutPostId, "televizori":getTechnPostId, "monitori":getTechnPostId}
 check_funcs = {"nouts":checkVkNouts, "televizori":checkVkTv, "monitori":checkVkMonitors}
 
+authorizationInfo = readAuthorizationInfo("vk_authorizations.info")
 
 class VkParser(threading.Thread):
 
@@ -21,8 +23,8 @@ class VkParser(threading.Thread):
 		threading.Thread.__init__(self)
 		self.lock = lock
 		appId = "5812997"
-		login = "rjckec@gmail.com"
-		password = "2413timur"
+		login = authorizationInfo["login"]
+		password = authorizationInfo["password"]
 		session = vk.AuthSession(app_id=appId, user_login=login, user_password=password)
 		self.api = vk.API(session)
 		self.groupId = getGroupId(self.api, "sevads")

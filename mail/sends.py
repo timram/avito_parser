@@ -1,7 +1,10 @@
 from mail.sender import Sender
+from mailAuthorizationReader import readAuthorizationInfo
 import time
 
 RECEIVERS = ["rjckec@gmail.com"]#, "izmaylov.rusl@yandex.ru"]
+authInfo = readAuthorizationInfo("mail_authorization.info")
+print(authInfo)
 
 def sendingDecorator(origin_func):
 	def wrapper(self, *args, **kwargs):
@@ -17,7 +20,7 @@ def sendingDecorator(origin_func):
 		self.logger.info("New posts of %s appeared\n %s", self.subject, body)
 		
 		for receiver in RECEIVERS:
-			sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur", 
+			sender = Sender(sender=authInfo["login"], password=authInfo["password"], 
 				receiver=receiver, subject=self.subject)
 			sender.addBody(body)
 			sender.send()
