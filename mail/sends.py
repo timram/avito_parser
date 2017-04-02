@@ -33,7 +33,7 @@ def sendingDecorator(origin_func):
 
 
 def sendErrorReport(error):
-	sender = Sender(sender="timurramazanov2@yandex.ru", password="2413timur",
+	sender = Sender(sender=authInfo["login"], password=authInfo["password"],
 		receiver="rjckec@gmail.com", subject="ПАРСЕР СДОХ")
 	sender.addBody("ПАРСЕР СДОХ, {0}".format(error))
 	sender.send()
